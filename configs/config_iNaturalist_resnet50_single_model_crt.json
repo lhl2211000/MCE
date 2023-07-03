@@ -1,0 +1,63 @@
+{
+    "name": "iNaturalist_ResNet50_TADE",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "ResNet50Model",
+        "args": {
+            "num_classes": 13,
+            "reduce_dimension": false,
+            "use_norm": true,
+            "returns_feat": true,
+            "num_experts": 1
+        }
+    },
+    "data_loader": {
+        "type": "iNaturalistDataLoader",
+        "args":{
+            "data_dir": "./data/iNaturalist",
+            "batch_size": 32,
+            "balanced": true,
+            "shuffle": true,
+            "num_workers": 0
+        }
+    },
+    "optimizer": {
+        "type": "SGD",
+        "args":{
+            "lr": 0.2,
+            "weight_decay": 2e-4,
+            "momentum": 0.9,
+            "nesterov": true
+        }
+    },
+    "add_extra_info": false,
+    "loss": {
+        "type": "CrossEntropyLoss",
+        "args": {
+        }
+    },
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "CustomLR",
+        "args": {
+            "step1": 60,
+            "step2": 80,
+            "gamma": 0.1,
+            "warmup_epoch": 5
+        }
+    },
+    "trainer": {
+        "epochs": 10,
+
+        "save_dir": "saved/inaturalist/tade_e100_inv1_bs512_lr0.2",
+        "save_period": 100,
+        "verbosity": 2,
+
+        "monitor": "max val_accuracy",
+        "tensorboard": false
+    }
+}
+             

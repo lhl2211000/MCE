@@ -1,0 +1,95 @@
+#Training
+python train.py -c configs/config_cifar100_ir100_tade.json
+python train.py -c configs/config_cifar100_ir50_tade.json
+python train.py -c configs/config_cifar100_ir10_tade.json
+
+python train.py -c configs/config_cifar10_ir100_tade.json
+python train.py -c configs/config_cifar10_ir50_tade.json
+python train.py -c configs/config_cifar10_ir10_tade.json
+
+python train.py -c configs/config_imagenet_lt_resnext50_tade.json
+python train.py -c configs/config_imagenet_lt_resnext50_single_model.json
+
+python train.py -c configs/config_cifar100_ir100_single_model.json
+python train.py -c configs/config_cifar10_irx_single_model.json
+
+python train.py -c configs/config_iNaturalist_resnet50_single_model.json
+python train.py -c configs/config_iNaturalist_resnet50_single_model_crt.json
+python train.py -c configs/config_iNaturalist_resnet50_tade.json
+
+python train.py -c configs/config_cifar100_ir100_two_stage.json
+
+saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0609_094342\model_best.pth(k=1,50.3%)
+#two stage:
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0526_095908\model_best.pth
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0526_100228\model_best.pth
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0530_153106\model_best.pth(simsiam数据增强)
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0530_205537\model_best.pth(标准数据增强)
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0602_232338\model_best.pth(CE,CIFAR100-LT-50)
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0602_232354\model_best.pth(CE,CIFAR100-LT-10)
+
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0603_083206\model_best.pth(CE+selfsupcon,CIFAR100-LT-50)
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0603_085949\model_best.pth(CE+selfsupcon,CIFAR100-LT-10)
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0603_135151\model_best.pth(CE+supcon,CIFAR100-LT-50)
+python train.py -c configs/config_cifar100_ir100_two_stage.json -t saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0603_161335\model_best.pth(CE+supcon,CIFAR100-LT-10)
+
+#crt:cifar100lt-100
+python train.py -c configs/config_cifar100_irx_single_model_crt.json -t saved/single_model/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0407_205554/checkpoint-epoch200.pth
+#crt:cifar100lt-50
+python train.py -c configs/config_cifar100_irx_single_model_crt.json -t saved\single_model\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0408_104322\checkpoint-epoch200.pth
+#crt:cifar100lt-10
+python train.py -c configs/config_cifar100_irx_single_model_crt.json -t saved\single_model\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0407_224304\model_best.pth
+#crt:cifar10lt-100
+python train.py -c configs/config_cifar10_irx_single_model_crt.json -t saved\cifar10\irx\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR10LT_IR100_TSEA\0408_150824\checkpoint-epoch200.pth
+#crt:cifar10lt-50
+python train.py -c configs/config_cifar10_irx_single_model_crt.json -t saved\cifar10\irx\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR10LT_IR100_TSEA\0408_171427\checkpoint-epoch200.pth
+#crt:cifar10lt-10
+python train.py -c configs/config_cifar10_irx_single_model_crt.json -t saved\cifar10\irx\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR10LT_IR100_TSEA\0408_124613\checkpoint-epoch200.pth
+#crt:imagenet20-lt
+python train.py -c configs/config_imagenet_lt_resnext50_single_model_crt.json -t saved\imagenet_single_model\tade_e180_inv2_bs64_lr0.025\models\ImageNet_LT_ResNeXt50_TADE\0412_215834\checkpoint-epoch180.pth
+#crt:iNaturalist20
+python train.py -c configs/config_iNaturalist_resnet50_single_model_crt.json -t saved\inaturalist\tade_e100_inv1_bs512_lr0.2\models\iNaturalist_ResNet50_TADE\0424_112942\model_best.pth
+python train.py -c configs/config_iNaturalist_resnet50_single_model_crt.json -t saved\inaturalist\tade_e100_inv1_bs512_lr0.2\models\iNaturalist_ResNet50_TADE\0428_155527\model_best.pth
+#Evaluate
+    #To evaluate expertise-diverse model on the uniform test class distributions
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0110_205605/model_best.pth
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0302_144048/model_best.pth(TADE-SCL 49.88%)
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0310_194445/model_best.pth(50.37%)
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0331_091245/model_best.pth(50.08%)
+    python test.py -r saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0526_220704\model_best.pth(50.62%)
+    python test.py -r saved/cifar100/ir50/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR50_TADE/0403_100923/model_best.pth(CIFAR100LT-50,55.12%)
+
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0324_115209/model_best.pth(专家2单模型)
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0324_115256/model_best.pth(专家2单模型+平凡scl)
+    python test.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0324_115356/model_best.pth(专家2单模型+改进scl)
+
+    python test.py -r saved/imagenet/tade_e180_inv2_bs64_lr0.025/models/ImageNet_LT_ResNeXt50_TADE/0315_164034/model_best.pth(68.00%)
+    python test.py -r saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0401_122401\model_best.pth(交换专家的分类器，测试不同的平衡环境下的特征学习情况)
+    python test.py -r saved\single_model\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0410_204119\model_best.pth
+    #To evaluate expertise-diverse model on agnostic test class distributions
+    python test_all_cifar.py -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0110_205605/model_best.pth
+
+
+#Test-time training
+#To test-time train the expertise-diverse model for agnostic test class distributions
+checkpoint_path(检查点的路径是不确定的，因此github上并没有写出某个特定的checkpoint_path)
+python test_training_cifar.py -c configs/test_time_cifar100_ir100_tade.json -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0110_205605/model_best.pth
+python test_training_cifar.py -c configs/test_time_cifar100_ir100_tade.json -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0302_144048/model_best.pth(TADE-SCL 49.88%)
+python test_training_cifar.py -c configs/test_time_cifar100_ir100_tade.json -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0310_161502/model_best.pth(TADE-SCL 49.7%)
+python test_training_cifar.py -c configs/test_time_cifar100_ir100_tade.json -r saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR100LT_IR100_TSEA/0310_194445/model_best.pth(50.37%)
+python test_training_cifar.py -c configs/test_time_cifar100_ir100_tade.json -r saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0409_205312\model_best.pth(50.18%)
+python test_training_cifar10.py -c configs/test_time_cifar10_ir50_tade.json -r saved/cifar10/ir50/tade_e200_inv2_bs128_lr0.1/models/Imbalance_CIFAR10LT_IR50_TADE/0408_213151/model_best.pth(TADE,cifar10lt-50)
+python test_training_cifar10.py -c configs/test_time_cifar10_ir10_tade.json -r saved\cifar10\ir10\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR10LT_IR10_TADE\0409_001349\model_best.pth(TADE,cifar10lt-10)
+python test_training_inat.py -c configs/test_time_iNaturalist_resnet50_tade.json -r saved\inaturalist\tade_e100_inv1_bs512_lr0.2\models\iNaturalist_ResNet50_TADE\0428_200038\model_best.pth
+One can change the imbalance ratio from 100 to 10/50 by changing the config file
+
+python test.py -r  saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0330_161827\model_best.pth
+
+
+python test.py -r  saved\single_model\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0108_120034\model_best.pth  MCSM中的S3
+
+
+#Evaluate for diversity
+python test_for_diversity.py -r saved\cifar100\ir100\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR100_TSEA\0526_220704\model_best.pth(CIFAR100LT-100,50.62%)
+python test_for_diversity.py -r saved\cifar100\ir50\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR50_TADE\0420_122846\model_best.pth(CIFAR100LT-50,55.11%)
+python test_for_diversity.py -r saved\cifar100\ir10\tade_e200_inv2_bs128_lr0.1\models\Imbalance_CIFAR100LT_IR00_TADE\0420_215344\model_best.pth(cifar100-10,64.36%)

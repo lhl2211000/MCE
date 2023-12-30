@@ -15,7 +15,7 @@ class Model(BaseModel):
 
     def __init__(self, num_classes, backbone_class=None):
         super().__init__()
-        if backbone_class is not None: # Do not init backbone here if None#未执行
+        if backbone_class is not None: # Do not init backbone here if None
             self.backbone = backbone_class(num_classes)
 
     def _hook_before_iter(self):
@@ -23,7 +23,6 @@ class Model(BaseModel):
 
     def forward(self, x,view,view1, mode=None):
         x = self.backbone(x,view,view1)
-
         assert mode is None
         return x
 
@@ -58,9 +57,9 @@ class ResNet10Model(Model):
 class ResNet32Model(Model): # From LDAM_DRW
     def __init__(self, num_classes, reduce_dimension=False, layer2_output_dim=None, layer3_output_dim=None, use_norm=False, num_experts=1, **kwargs):
         super().__init__(num_classes, None)
-        if num_experts == 1:#未执行
+        if num_experts == 1:
             self.backbone = resnet_cifar.ResNet_s(resnet_cifar.BasicBlock, [5, 5, 5], num_classes=num_classes, reduce_dimension=reduce_dimension, layer2_output_dim=layer2_output_dim, layer3_output_dim=layer3_output_dim, use_norm=use_norm, **kwargs)
-        else:#这里的backbone是整个的专家网络，并不是网络的前半部分
+        else:
             self.backbone = expert_resnet_cifar.ResNet_s( expert_resnet_cifar.BasicBlock, [5, 5, 5], num_classes=num_classes, reduce_dimension=reduce_dimension, layer2_output_dim=layer2_output_dim, layer3_output_dim=layer3_output_dim, use_norm=use_norm, num_experts=num_experts, **kwargs )
 
 class ResNet50Model(Model):

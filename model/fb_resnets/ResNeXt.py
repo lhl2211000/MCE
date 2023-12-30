@@ -127,7 +127,7 @@ class ResNext(nn.Module):
             print('Using dropout.')
             self.dropout = nn.Dropout(p=dropout)
 
-        ####################################                特征学习分支               ###########################################
+     
         self.raw_feature = 2048
         self.projector_final_dim = 2048
         self.bottleneck_dim = 512
@@ -150,7 +150,7 @@ class ResNext(nn.Module):
                                        nn.BatchNorm1d(self.bottleneck_dim),
                                        nn.ReLU(inplace=True),  # hidden layer
                                        nn.Linear(self.bottleneck_dim, self.projector_final_dim))  # output layer #
-        ########################################################################################################################
+        
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -205,14 +205,14 @@ class ResNext(nn.Module):
 
             if self.use_dropout:
                 x = self.dropout(x)
-            #######################      特征学习分支      ########################
+           
             self.feat = []
             self.feat_stop_grad = []
             f1 = self.projector(x)
             self.feat_stop_grad.append(f1.detach())
             f2 = self.predictor(f1)
             self.feat.append(f2)
-            #####################################################################
+          
             x = self.linear(x)
         
         # return x

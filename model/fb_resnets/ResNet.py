@@ -213,7 +213,7 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x,view=None,view1=None):
         with autocast():
             x = self.conv1(x)
             x = self.bn1(x)

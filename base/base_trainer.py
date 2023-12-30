@@ -4,12 +4,15 @@ from abc import abstractmethod
 from numpy import inf
 from logger import TensorboardWriter
 from utils import load_state_dict, rename_parallel_state_dict
+import time
 
 class BaseTrainer:
     """
     Base class for all trainers
     """
-    def __init__(self, model, criterion, metric_ftns, optimizer, config):
+    # def __init__(self, model, criterion, metric_ftns, optimizer, config):
+    # newly added by zsw
+    def __init__(self, model, criterion, metric_ftns, optimizer, config, start_epoch):
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
 
@@ -30,20 +33,21 @@ class BaseTrainer:
         cfg_trainer = config['trainer']
         self.epochs = cfg_trainer['epochs']
         self.save_period = cfg_trainer['save_period']
-        self.monitor = cfg_trainer.get('monitor', 'off')#暂时不知道这个get方法有什么用，看起来像是没用
+        self.monitor = cfg_trainer.get('monitor', 'off')
 
         # configuration to monitor model performance and save best
-        if self.monitor == 'off':#train.py文件未执行
+        if self.monitor == 'off':
             self.mnt_mode = 'off'
             self.mnt_best = 0
         else:#self.monitor="max val_accuracy"
-            self.mnt_mode, self.mnt_metric = self.monitor.split()# self.mnt_mode=max, self.mnt_metric=val_accuracy
+            self.mnt_mode, self.mnt_metric = self.monitor.split() 
             assert self.mnt_mode in ['min', 'max']
 
-            self.mnt_best = inf if self.mnt_mode == 'min' else -inf#self.mnt_best = -inf
+            self.mnt_best = inf if self.mnt_mode == 'min' else -inf 
             self.early_stop = cfg_trainer.get('early_stop', inf)
 
-        self.start_epoch = 1
+        # self.start_epoch = 1
+        self.start_epoch = start_epoch
 
         self.checkpoint_dir = config.save_dir
 
@@ -72,6 +76,7 @@ class BaseTrainer:
         Full training logic
         """
         not_improved_count = 0
+       
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
 
@@ -85,7 +90,7 @@ class BaseTrainer:
 
             # evaluate model performance according to configured metric, save best checkpoint as model_best
             best = False
-            if self.mnt_mode != 'off':#执行
+            if self.mnt_mode != 'off':#
                 try:
                     # check whether model performance improved or not, according to specified metric(mnt_metric)
                     improved = ( self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best ) or ( self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best )
@@ -146,13 +151,15 @@ class BaseTrainer:
             'criterion': self.criterion.state_dict()
         }
         if not best_only:
-            filename = str(self.checkpoint_dir / 'checkpoint-epoch{}.pth'.format(epoch))
+            filename = str(self.checkpoint_dir / 'checkpoint-each_epoch.pth')
             torch.save(state, filename)
             self.logger.info("Saving checkpoint: {} ...".format(filename))
         if save_best:
             best_path = str(self.checkpoint_dir / 'model_best.pth')
             torch.save(state, best_path)
             self.logger.info("Saving current best: {} ...".format(best_path))
+            self.logger.info("The current best val_accuracy is at epoch: {} ...".format(state['epoch'])) # 
+
 
     def _load_crt(self, cRT_pretrain):
         """

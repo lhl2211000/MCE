@@ -9,13 +9,13 @@ import model.metric as module_metric
 import model.model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
-############    为了把cifar-100改为两视图而添加的包  #################
+
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Dataset, Sampler
 import random
 from PIL import ImageFilter
 from data_loader.imbalance_cifar import IMBALANCECIFAR100
-###################################################################
+
 
 deterministic = False
 if deterministic:
@@ -56,18 +56,18 @@ def learing_rate_scheduler(optimizer, config):
 def main(config):
     logger = config.get_logger('train')
 
-    # setup data_loader instances，crt的采样策略为class balanced sampling
+    # setup data_loader instances
     data_loader = config.init_obj('data_loader', module_data)#import data_loader.data_loaders as module_data
-    valid_data_loader = data_loader.split_validation()#返回cifar100测试集
+    valid_data_loader = data_loader.split_validation()
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
     logger.info(model)
     # get function handles of loss and metrics
     loss_class = getattr(module_loss, config["loss"]["type"])
-    if hasattr(loss_class, "require_num_experts") and loss_class.require_num_experts:#未执行
+    if hasattr(loss_class, "require_num_experts") and loss_class.require_num_experts:
         criterion = config.init_obj('loss', module_loss, cls_num_list=data_loader.cls_num_list, num_experts=config["arch"]["args"]["num_experts"])
-    else:#执行
+    else:
         criterion = config.init_obj('loss', module_loss, cls_num_list=data_loader.cls_num_list)
 
     metrics = [getattr(module_metric, met) for met in config['metrics']]

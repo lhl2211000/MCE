@@ -8,6 +8,7 @@ import torchvision.datasets
 from torchvision import transforms
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, Dataset, Sampler
+from data_loader.randaugment import rand_augment_transform
 
 class LT_Dataset(Dataset):
     num_classes = 365
@@ -84,9 +85,13 @@ class LT_Dataset_Eval(Dataset):
 
 
 class Places_LT(DataLoader):
-    def __init__(self,  data_dir="", batch_size=60, num_workers=40, training=True, train_txt = "./data_txt/Places_LT_v2/Places_LT_train.txt",
+    def __init__(self,  data_dir="", batch_size=60, num_workers=40, training=True, 
+                 train_txt = "./data_txt/Places_LT_v2/Places_LT_train.txt",
                  eval_txt = "./data_txt/Places_LT_v2/Places_LT_val.txt",
                  test_txt = "./data_txt/Places_LT_v2/Places_LT_test.txt"):
+                #  train_txt = "./data_txt/Places_LT_v2-test/Places_LT_train.txt",
+                #  eval_txt = "./data_txt/Places_LT_v2-test/Places_LT_val.txt",
+                #  test_txt = "./data_txt/Places_LT_v2-test/Places_LT_test.txt"):
         self.num_workers = num_workers
         self.batch_size= batch_size
         
@@ -100,6 +105,19 @@ class Places_LT(DataLoader):
             normalize,
             ])
         
+        # rgb_mean = (0.485, 0.456, 0.406)
+        # ra_params = dict(translate_const=int(224 * 0.45), img_mean=tuple([min(255, round(255 * x)) for x in rgb_mean]), )
+        # transform_train = transforms.Compose([
+        #         transforms.RandomResizedCrop(224),
+        #         transforms.RandomHorizontalFlip(),
+        #         transforms.RandomApply([
+        #             transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+        #         ], p=0.8),
+        #         transforms.RandomGrayscale(p=0.2),
+        #         rand_augment_transform('rand-n{}-m{}-mstd0.5'.format(2, 10), ra_params),
+        #         transforms.ToTensor(),
+        #         normalize,
+        #     ])
 
         transform_test = transforms.Compose([
                 transforms.Resize(256),

@@ -12,7 +12,7 @@ def focal_loss(input_values, gamma):
     return loss.mean()
 
 class FocalLoss(nn.Module):
-    def __init__(self, cls_num_list=None, weight=None, gamma=2.0):#源代码是gamma=0.
+    def __init__(self, cls_num_list=None, weight=None, gamma=2.0):
         super(FocalLoss, self).__init__()
         assert gamma >= 0
         self.gamma = gamma
@@ -36,10 +36,8 @@ class CrossEntropyLoss(nn.Module):
             self.per_cls_weights = torch.tensor(per_cls_weights, dtype=torch.float, requires_grad=False)
         else:
             self.per_cls_weights = None
-        #####################    变成Balanced Softmax Loss    ####################
-        prior = np.array(cls_num_list) / np.sum(cls_num_list)  # P(Ci)
+        prior = np.array(cls_num_list) / np.sum(cls_num_list)  
         self.prior = torch.tensor(prior).float().cuda()
-        #########################################################################
 
     def inverse_prior(self, prior):
         value, idx0 = torch.sort(prior)
@@ -56,18 +54,16 @@ class CrossEntropyLoss(nn.Module):
         
         return self
 
-    def forward(self, output_logits, target): # output is logits
-        #################################################
+    def forward(self, output_logits, target): 
+
         inverse_prior = self.inverse_prior(self.prior)
         self.tau=2
-        #################################################
-        return F.cross_entropy(output_logits+ torch.log(self.prior + 1e-9)- self.tau * torch.log(inverse_prior+ 1e-9) , target, weight=self.per_cls_weights)#+ torch.log(self.prior + 1e-9)- self.tau * torch.log(inverse_prior+ 1e-9)
+        return F.cross_entropy(output_logits+ torch.log(self.prior + 1e-9)- self.tau * torch.log(inverse_prior+ 1e-9) , target, weight=self.per_cls_weights)
 
 class LDAMLoss(nn.Module):
-    def __init__(self, cls_num_list=None, max_m=0.5, s=30, reweight_epoch=80):#源代码是reweight_epoch=-1
+    def __init__(self, cls_num_list=None, max_m=0.5, s=30, reweight_epoch=80):
         super().__init__()
         if cls_num_list is None:
-            # No cls_num_list is provided, then we cannot adjust cross entropy with LDAM.
             self.m_list = None
         else:
             self.reweight_epoch = reweight_epoch
@@ -288,16 +284,11 @@ class DiverseExpertLoss(nn.Module):
         # Softmax loss for expert 1 
         loss += self.base_loss(expert1_logits, target)
         
-        # Balanced Softmax loss for expert 2 
-        expert2_logits = expert2_logits + torch.log(self.prior + 1e-9) #原文中并没有1e-9，代码中加上1e-9是因为log()里面的变量不能为0
+        expert2_logits = expert2_logits + torch.log(self.prior + 1e-9) 
         loss += self.base_loss(expert2_logits, target)
         
         # Inverse Softmax loss for expert 3
         inverse_prior = self.inverse_prior(self.prior)
-        #########  针对CIFAR-10-LT10调整self.tau的值  ########
-        # self.tau=1
-        ###################################################
-                                                                        #self.tau=2
         expert3_logits = expert3_logits + torch.log(self.prior + 1e-9) - self.tau * torch.log(inverse_prior+ 1e-9) 
         loss += self.base_loss(expert3_logits, target)
    
@@ -309,7 +300,7 @@ class AllCE(nn.Module):
         self.base_loss = F.cross_entropy
 
     def forward(self, output_logits, target, extra_info=None):
-        if extra_info is None:  # 未执行
+        if extra_info is None:  
             return self.base_loss(output_logits, target)  # output_logits indicates the final prediction
 
         loss = 0

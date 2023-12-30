@@ -9,9 +9,9 @@ import numpy as np
 from parse_config import ConfigParser
 
 
-def main(config):  # 读入的config是相应的pth文件同级路径下的config.json
+def main(config):  
     logger = config.get_logger('test')
-    # setup data_loader instances，返回cifar100的测试集
+    # setup data_loader 
     data_loader = getattr(module_data, config['data_loader']['type'])(
         # config['data_loader']['type']=ImbalanceCIFAR100DataLoader
         config['data_loader']['args']['data_dir'],
@@ -23,10 +23,7 @@ def main(config):  # 读入的config是相应的pth文件同级路径下的confi
 
     # build model architecture
     if 'returns_feat' in config['arch']['args']:
-        #############################################################################################
-        # model = config.init_obj('arch', module_arch, allow_override=True, returns_feat=False)
         model = config.init_obj('arch', module_arch, allow_override=True, returns_feat=True)
-    #############################################################################################
     else:
         model = config.init_obj('arch', module_arch)
 
@@ -87,7 +84,6 @@ def main(config):  # 读入的config是相应的pth文件同级路径下的confi
             expert1_logits = output['logits'][0]
             expert2_logits = output['logits'][1]
             expert3_logits = output['logits'][2]
-            ###############################################################
 
             for t1, p1 in zip(target.view(-1), expert1_logits.argmax(dim=1).view(-1)):
                 if t1.long()!=p1.long():
@@ -105,15 +101,15 @@ def main(config):  # 读入的config是相应的pth文件同级路径下的confi
     sum1=0.0
     sum2=0.0
     sum3=0.0
-    # 专家1与2计算双误度量
+
     for i1 in range(len(bool_list1)):
         if bool_list1[i1]==0 and bool_list2[i1]==0:
             sum1=sum1+1.0
-    # 专家1与3计算双误度量
+
     for i2 in range(len(bool_list1)):
         if bool_list1[i2]==0 and bool_list3[i2]==0:
             sum2=sum2+1.0
-    # 专家2与3计算双误度量
+
     for i3 in range(len(bool_list1)):
         if bool_list2[i3]==0 and bool_list3[i3]==0:
             sum3=sum3+1.0

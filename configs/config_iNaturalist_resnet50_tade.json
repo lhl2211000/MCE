@@ -5,7 +5,7 @@
     "arch": {
         "type": "ResNet50Model",
         "args": {
-            "num_classes": 13,
+            "num_classes": 8142,
             "reduce_dimension": true,
             "use_norm": true,
             "returns_feat": true,
@@ -15,16 +15,16 @@
     "data_loader": {
         "type": "MCE_iNaturalistDataLoader",
         "args":{
-            "data_dir": "./data/iNaturalist",
-            "batch_size": 8,
+            "data_dir": "H:/Dataset/iNaturalist2018",
+            "batch_size": 32,
             "shuffle": true,
-            "num_workers": 0
+            "num_workers": 24
         }
     },
     "optimizer": {
         "type": "SGD",
         "args":{
-            "lr": 0.2,
+            "lr": 0.05,
             "weight_decay": 2e-4,
             "momentum": 0.9,
             "nesterov": true
@@ -51,11 +51,9 @@
     },
     "trainer": {
         "epochs": 100,
-
-        "save_dir": "saved/inaturalist/tade_e100_inv1_bs512_lr0.2",
-        "save_period": 100,
+        "save_dir": "saved/inaturalist2018/tade_e100",
+        "save_period": 1,
         "verbosity": 2,
-
         "monitor": "max val_accuracy",
         "tensorboard": false
     }

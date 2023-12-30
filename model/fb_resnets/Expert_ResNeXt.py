@@ -100,8 +100,6 @@ class Bottleneck(nn.Module):
         return out
 
 class ResNext(nn.Module):
-                #Bottleneck,[3,4,6,3]          ,3,       32,                  4,         None,             1000,           True,                   True,              类中赋值192,             类中赋值384,               True,
-    # def __init__(self, block, layers, num_experts, groups=1, width_per_group=64, dropout=None, num_classes=1000, use_norm=False, reduce_dimension=False, layer3_output_dim=None, layer4_output_dim=None, returns_feat=False, s=30):
     def __init__(self, block, layers, num_experts, groups=1, width_per_group=64, dropout=None,num_classes=100, use_norm=False, reduce_dimension=False, layer3_output_dim=None,layer4_output_dim=None, returns_feat=False, s=30):
         self.inplanes = 64
         self.num_experts = num_experts
@@ -142,41 +140,12 @@ class ResNext(nn.Module):
         if self.use_dropout:
             print('Using dropout.')
             self.dropout = nn.Dropout(p=dropout)
-
-        ################################# simsiam：用于监督对比损失的组件 ###################################################
         self.raw_feature=1536
         self.projector_final_dim=2048
-        self.bottleneck_dim=512
-        print('===============================================')
-        print('self.projector_final_dim:',self.projector_final_dim)
-        print('===============================================')
-        # self.projector = nn.Sequential( nn.Linear(self.raw_feature, self.raw_feature, bias=False),
-        #                                 nn.BatchNorm1d(self.raw_feature),
-        #                                 nn.ReLU(inplace=True), # first layer
-        #                                 nn.Linear(self.raw_feature, self.raw_feature, bias=False),
-        #                                 nn.BatchNorm1d(self.raw_feature),
-        #                                 nn.ReLU(inplace=True), # second layer
-        #                                 # nn.Linear(layer3_output_dim, layer3_output_dim),
-        #                                 nn.Linear(self.raw_feature, self.projector_final_dim),
-        #                                 nn.BatchNorm1d(self.projector_final_dim, affine=False)) # output layer
-        # self.projector[6].bias.requires_grad = False # hack: not use bias as it is followed by BN
-        #
-        # # build a 2-layer predictor
-        # self.predictor = nn.Sequential( nn.Linear(self.projector_final_dim, self.bottleneck_dim, bias=False),#
-        #                                 nn.BatchNorm1d(self.bottleneck_dim),
-        #                                 nn.ReLU(inplace=True), # hidden layer
-        #                                 nn.Linear(self.bottleneck_dim, self.projector_final_dim)) # output layer #
-
+        self.bottleneck_dim=512  
         self.projectors = nn.ModuleList([self._make_projector(self.raw_feature,self.projector_final_dim) for _ in range(num_experts)])
         self.predictors = nn.ModuleList([self._make_predictor(self.projector_final_dim, self.bottleneck_dim) for _ in range(num_experts)])
-        # print("第一个")
-        # print(self.projectors)
-        # print("第一个")
-        # print("第二个")
-        # print(self.predictors)
-        # print("第二个")
-        ################################################################################################################
-
+       
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -256,50 +225,39 @@ class ResNext(nn.Module):
         if self.use_dropout:
             x = self.dropout(x)
 
-        # self.feat.append(x)
-        ###################  让原始的特征依次通过projector,predictor  ##################
-        # out_feat = self.projectors[ind](x)
         out_feat = self.projectors[ind](F.normalize(x,dim=1))
         self.feat_stop_grad.append(out_feat.detach())
         out_feat = self.predictors[ind](out_feat)
         self.feat.append(out_feat)
-        ############################################################################
+      
         x = (self.linears[ind])(x)
         x = x * self.s
         return x
 
-    def forward(self, x):
+    def forward(self, x,view=None,view1=None):
         with autocast():
             x = self.conv1(x)#batch-size*64*112*112
             x = self.bn1(x)
             x = self.relu(x)
-            x = self.maxpool(x)#batch-size*64*56*56
+            x = self.maxpool(x)
 
-            x = self.layer1(x)#batch-size*256*56*56
-            x = self.layer2(x)#batch-size*512*28*28
+            x = self.layer1(x)
+            x = self.layer2(x)
 
             outs = []
-            self.feat = []
-
-            #####################################################################
+            self.feat = []     
             self.feat_stop_grad = []
-            #####################################################################
-
+            
             for ind in range(self.num_experts):
                 outs.append(self._separate_part(x, ind))
-
-            #####################################################################
             self.feat_stop_grad = torch.stack(self.feat_stop_grad, dim=1)
-            #####################################################################
-
             final_out = torch.stack(outs, dim=1).mean(dim=1)
-        # aaaa=torch.stack(self.feat, dim=1)
-        # bbbb=self.feat_stop_grad
+       
         if self.returns_feat:
             return {
                 "output": final_out, 
                 "feat": torch.stack(self.feat, dim=1),
-                "feat_stop_grad": self.feat_stop_grad,  # 我加上的
+                "feat_stop_grad": self.feat_stop_grad,  
                 "logits": torch.stack(outs, dim=1)
             }
         else:

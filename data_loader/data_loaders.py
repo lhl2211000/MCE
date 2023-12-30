@@ -1,5 +1,5 @@
 
 from .cifar_data_loaders import ImbalanceCIFAR10DataLoader, CIFAR100DataLoader, ImbalanceCIFAR100DataLoader, ImbalanceCIFAR10DataLoader,firststage_ImbalanceCIFAR100DataLoader,selfsupcon_ImbalanceCIFAR100DataLoader,MCE_ImbalanceCIFAR100DataLoader,MCE_ImbalanceCIFAR10DataLoader
 from .imagenet_lt_data_loaders import ImageNetLTDataLoader
-from .inaturalist_data_loaders import iNaturalistDataLoader,MCE_iNaturalistDataLoader
+from .inaturalist_data_loaders import MCE_iNaturalistDataLoader
 from .places_loader import Places_LT

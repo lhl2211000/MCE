@@ -8,7 +8,7 @@ from logger import setup_logging
 from utils import read_json, write_json
 
 
-class ConfigParser:#传入的args就是这里的config
+class ConfigParser:
     def __init__(self, config, resume=None, modification=None, load_crt=None, run_id=None):
         """
         class to parse configuration json file. Handles hyperparameters for training, initializations of modules, checkpoint saving
@@ -25,7 +25,7 @@ class ConfigParser:#传入的args就是这里的config
         self.load_crt = load_crt
 
         # set save_dir where trained model and log will be saved.
-        save_dir = Path(self.config['trainer']['save_dir'])#"saved/cifar100/ir100/tade_e200_inv2_bs128_lr0.1"
+        save_dir = Path(self.config['trainer']['save_dir'])
 
         exper_name = self.config['name']
         if run_id is None: # use timestamp as default run-id
@@ -66,10 +66,10 @@ class ConfigParser:#传入的args就是这里的config
             load_crt = args.load_crt
         else:
             load_crt = None
-        
-        if args.resume is not None:#测试阶段执行
+        # Testing
+        if args.resume is not None:
             resume = Path(args.resume)
-            cfg_fname = resume.parent / 'config.json'#cfg_name应该是config_name的简称，cfg_name=相应的pth路径下的config.json文件
+            cfg_fname = resume.parent / 'config.json'
         else:
             msg_no_cfg = "Configuration file need to be specified. Add '-c config.json', for example."
             assert args.config is not None, msg_no_cfg
@@ -99,8 +99,8 @@ class ConfigParser:#传入的args就是这里的config
         if not allow_override:
             assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)
-        #getattr()函数：用于返回一个对象属性值。
-        return getattr(module, module_name)(*args, **module_args)#**module_args是json文件里面的那些参数
+
+        return getattr(module, module_name)(*args, **module_args)
 
     def init_ftn(self, name, module, *args, **kwargs):
         """

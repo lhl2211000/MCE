@@ -8,6 +8,14 @@ from base import BaseDataLoader
 from PIL import Image
 from PIL import ImageFilter
 
+class RandAugment:
+    def __init__(self, num_ops, magnitude):
+        self.num_ops = num_ops
+        self.magnitude = magnitude
+        self.augment = transforms.autoaugment.RandAugment(num_ops=self.num_ops, magnitude=self.magnitude)
+
+    def __call__(self, img):
+        return self.augment(img)
 class BalancedSampler(Sampler):
     def __init__(self, buckets, retain_epoch_size=False):
         for bucket in buckets:
@@ -66,75 +74,7 @@ class LT_Dataset(Dataset):
         if self.transform is not None:
             sample = self.transform(sample)
 
-        # return sample, label, path
         return sample, label
-
-class iNaturalistDataLoader(DataLoader):
-    """
-    iNaturalist Data Loader
-    """
-    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, 
-                 train_txt= './data_txt/iNaturalist18/iNaturalist18_train.txt', 
-                 eval_txt= './data_txt/iNaturalist18/iNaturalist18_val.txt'):
-        train_trsfm = transforms.Compose([
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.466, 0.471, 0.380], [0.195, 0.194, 0.192])
-        ])
-        test_trsfm = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize([0.466, 0.471, 0.380], [0.195, 0.194, 0.192])
-        ])
-
-        if training:
-            dataset = LT_Dataset(data_dir, train_txt , train_trsfm)
-            val_dataset = LT_Dataset(data_dir, eval_txt, test_trsfm)
-        else: # test
-            dataset = LT_Dataset(data_dir, eval_txt, test_trsfm)
-            val_dataset = None
-
-        self.dataset = dataset
-        self.val_dataset = val_dataset
-
-        self.n_samples = len(self.dataset)
-
-        # num_classes = 8142
-        num_classes = 13
-
-        cls_num_list = [0] * num_classes
-        for label in dataset.targets:
-            cls_num_list[label] += 1
-
-        self.cls_num_list = cls_num_list
-
-        if balanced:
-            if training:
-                buckets = [[] for _ in range(num_classes)]
-                for idx, label in enumerate(dataset.targets):
-                    buckets[label].append(idx)
-                sampler = BalancedSampler(buckets, retain_epoch_size)
-                shuffle = False
-            else:
-                print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
-        else:
-            sampler = None
-        
-        self.shuffle = shuffle
-        self.init_kwargs = {
-            'batch_size': batch_size,
-            'shuffle': self.shuffle,
-            'num_workers': num_workers
-        }
-
-        super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
-
-    def split_validation(self):
-        # return None
-        # If you want to validate:
-        return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
 class MCE_TwoCropsTransform:
     """Take two random crops of one image as the query and key."""
@@ -166,10 +106,10 @@ class MCE_iNaturalistDataLoader(DataLoader):
     iNaturalist Data Loader
     """
 
-    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False,
+    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=4, training=True, balanced=False,
                  retain_epoch_size=True,
-                 train_txt='./data_txt/iNaturalist18/iNaturalist18_train.txt',
-                 eval_txt='./data_txt/iNaturalist18/iNaturalist18_val.txt'):
+                 train_txt='./data_txt/iNaturalist/iNaturalist18_train.txt',
+                 eval_txt='./data_txt/iNaturalist/iNaturalist18_val.txt'):
         train_trsfm1 = transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
@@ -199,9 +139,11 @@ class MCE_iNaturalistDataLoader(DataLoader):
         if training:
             dataset = LT_Dataset(data_dir, train_txt, MCE_TwoCropsTransform(train_trsfm1,train_trsfm2,train_trsfm2))
             val_dataset = LT_Dataset(data_dir, eval_txt, test_trsfm)
+           
         else:  # test
             dataset = LT_Dataset(data_dir, eval_txt, test_trsfm)
             val_dataset = None
+           
 
         self.dataset = dataset
         self.val_dataset = val_dataset

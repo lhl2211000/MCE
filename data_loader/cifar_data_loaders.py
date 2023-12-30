@@ -5,10 +5,20 @@ import os, sys
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Dataset, Sampler
 from base import BaseDataLoader
-from PIL import Image
 from .imbalance_cifar import IMBALANCECIFAR10, IMBALANCECIFAR100
 from PIL import ImageFilter
+from PIL import Image, ImageEnhance, ImageOps
 
+
+class RandAugment:
+    def __init__(self, num_ops, magnitude):
+        self.num_ops = num_ops
+        self.magnitude = magnitude
+        self.augment = transforms.autoaugment.RandAugment(num_ops=self.num_ops, magnitude=self.magnitude)
+
+    def __call__(self, img):
+        return self.augment(img)
+    
 class CIFAR100DataLoader(DataLoader):
     """
     Load CIFAR 100
@@ -90,72 +100,70 @@ class BalancedSampler(Sampler):
         else:
             return max([len(bucket) for bucket in self.buckets]) * self.bucket_num # Ensures every instance has the chance to be visited in an epoch
 
-class ImbalanceCIFAR100DataLoader(DataLoader):
-    """
-    Imbalance Cifar100 Data Loader
-    """
-                                #batch_size=128         num_workers被传入的参数改为0
-    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, imb_type='exp', imb_factor=0.01):
-        normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-            std=[0.2023, 0.1994, 0.2010])
-        train_trsfm = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        test_trsfm = transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])
-        test_dataset = datasets.CIFAR100(data_dir, train=False, download=False, transform=test_trsfm) # test set ，源代码download=True，但是我已经下载了，所以改成False
+# class ImbalanceCIFAR100DataLoader(DataLoader):
+#     """
+#     Imbalance Cifar100 Data Loader
+#     """
+   
+#     def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, imb_type='exp', imb_factor=0.01):
+#         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+#             std=[0.2023, 0.1994, 0.2010])
+#         train_trsfm = transforms.Compose([
+#             transforms.RandomCrop(32, padding=4),
+#             transforms.RandomHorizontalFlip(),
+#             transforms.RandomRotation(15),
+#             transforms.ToTensor(),
+#             normalize,
+#         ])
+#         test_trsfm = transforms.Compose([
+#             transforms.ToTensor(),
+#             normalize,
+#         ])
+#         test_dataset = datasets.CIFAR100(data_dir, train=False, download=False, transform=test_trsfm) #
         
-        if training:#训练阶段执行
-            dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=train_trsfm, imb_type=imb_type, imb_factor=imb_factor) # 源代码download=True，但是我已经下载了，所以改成False
-            val_dataset = test_dataset
-        else:#test.py文件执行
-            dataset = test_dataset
-            val_dataset = None
+#         if training:
+#             dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=train_trsfm, imb_type=imb_type, imb_factor=imb_factor) 
+#             val_dataset = test_dataset
+#         else:
+#             dataset = test_dataset
+#             val_dataset = None
 
-        self.dataset = dataset
-        self.val_dataset = val_dataset
+#         self.dataset = dataset
+#         self.val_dataset = val_dataset
 
-        num_classes = len(np.unique(dataset.targets))#类别数量
-        assert num_classes == 100
+#         num_classes = len(np.unique(dataset.targets))
+#         assert num_classes == 100
 
-        cls_num_list = [0] * num_classes
-        for label in dataset.targets:
-            cls_num_list[label] += 1#每个类别下的数量
+#         cls_num_list = [0] * num_classes
+#         for label in dataset.targets:
+#             cls_num_list[label] += 1
 
-        self.cls_num_list = cls_num_list
+#         self.cls_num_list = cls_num_list
 
-        if balanced:#不平衡环境下未执行
-            if training:
-                buckets = [[] for _ in range(num_classes)]
-                for idx, label in enumerate(dataset.targets):
-                    buckets[label].append(idx)
-                sampler = BalancedSampler(buckets, retain_epoch_size)
-                shuffle = False
-            else:
-                print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
-        else:
-            sampler = None
+#         if balanced:
+#             if training:
+#                 buckets = [[] for _ in range(num_classes)]
+#                 for idx, label in enumerate(dataset.targets):
+#                     buckets[label].append(idx)
+#                 sampler = BalancedSampler(buckets, retain_epoch_size)
+#                 shuffle = False
+#             else:
+#                 print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
+#         else:
+#             sampler = None
         
-        self.shuffle = shuffle#=True
-        self.init_kwargs = {
-            'batch_size': batch_size,#128
-            'shuffle': self.shuffle,#True
-            'num_workers': num_workers#0
-        }
+#         self.shuffle = shuffle#=True
+#         self.init_kwargs = {
+#             'batch_size': batch_size,#128
+#             'shuffle': self.shuffle,#True
+#             'num_workers': num_workers#0
+#         }
 
-        super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
+#         super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
 
-    def split_validation(self):#此函数在train.py文件的 def main(config)函数中被调用
-        # If you do not want to validate:
-        # return None
-        # If you want to validate:
-        return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
+#     def split_validation(self):
+
+#         return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
 class GaussianBlur(object):
     """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
@@ -168,7 +176,6 @@ class GaussianBlur(object):
         x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
         return x
 
-# transform= TwoCropsTransform(train_trsfm)
 class TwoCropsTransform:
     """Take two random crops of one image as the query and key."""
 
@@ -199,7 +206,6 @@ class firststage_ImbalanceCIFAR100DataLoader(DataLoader):
     Imbalance Cifar100 Data Loader
     """
 
-    # batch_size=128         num_workers被传入的参数改为0
     def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False,
                  retain_epoch_size=True, imb_type='exp', imb_factor=0.01):
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
@@ -217,28 +223,28 @@ class firststage_ImbalanceCIFAR100DataLoader(DataLoader):
             transforms.ToTensor(),
             normalize,
         ])
-        test_dataset = datasets.CIFAR100(data_dir, train=False, download=False,transform=test_trsfm)  # test set ，源代码download=True，但是我已经下载了，所以改成False
+        test_dataset = datasets.CIFAR100(data_dir, train=False, download=False,transform=test_trsfm) 
 
-        if training:  # 训练阶段执行
-            dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=train_trsfm, imb_type=imb_type,imb_factor=imb_factor)  # 源代码download=True，但是我已经下载了，所以改成False
+        if training: 
+            dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=train_trsfm, imb_type=imb_type,imb_factor=imb_factor)
             val_dataset = test_dataset
-        else:  # test.py文件执行
+        else:  
             dataset = test_dataset
             val_dataset = None
 
         self.dataset = dataset
         self.val_dataset = val_dataset
 
-        num_classes = len(np.unique(dataset.targets))  # 类别数量
+        num_classes = len(np.unique(dataset.targets)) 
         assert num_classes == 100
 
         cls_num_list = [0] * num_classes
         for label in dataset.targets:
-            cls_num_list[label] += 1  # 每个类别下的数量
+            cls_num_list[label] += 1 
 
         self.cls_num_list = cls_num_list
 
-        if balanced:  # 不平衡环境下未执行
+        if balanced: 
             if training:
                 buckets = [[] for _ in range(num_classes)]
                 for idx, label in enumerate(dataset.targets):
@@ -250,19 +256,16 @@ class firststage_ImbalanceCIFAR100DataLoader(DataLoader):
         else:
             sampler = None
 
-        self.shuffle = shuffle  # =True
+        self.shuffle = shuffle 
         self.init_kwargs = {
-            'batch_size': batch_size,  # 128
-            'shuffle': self.shuffle,  # True
-            'num_workers': num_workers  # 0
+            'batch_size': batch_size, 
+            'shuffle': self.shuffle,  
+            'num_workers': num_workers  
         }
 
-        super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler)  # Note that sampler does not apply to validation set
+        super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) 
 
-    def split_validation(self):  # 此函数在train.py文件的 def main(config)函数中被调用
-        # If you do not want to validate:
-        # return None
-        # If you want to validate:
+    def split_validation(self):  
         return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
 class selfsupcon_ImbalanceCIFAR100DataLoader(DataLoader):
@@ -270,7 +273,6 @@ class selfsupcon_ImbalanceCIFAR100DataLoader(DataLoader):
     Imbalance Cifar100 Data Loader
     """
 
-    # batch_size=128         num_workers被传入的参数改为0
     def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False,
                  retain_epoch_size=True, imb_type='exp', imb_factor=0.01):
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
@@ -284,39 +286,33 @@ class selfsupcon_ImbalanceCIFAR100DataLoader(DataLoader):
             transforms.ToTensor(),
             normalize,
         ])
-        # train_trsfm = transforms.Compose([
-        #     transforms.RandomCrop(32, padding=4),
-        #     transforms.RandomHorizontalFlip(),
-        #     transforms.RandomRotation(15),
-        #     transforms.ToTensor(),
-        #     normalize,
-        # ])
+    
         test_trsfm = transforms.Compose([
             transforms.ToTensor(),
             normalize,
         ])
-        test_dataset = datasets.CIFAR100(data_dir, train=False, download=False,transform=test_trsfm)  # test set ，源代码download=True，但是我已经下载了，所以改成False
+        test_dataset = datasets.CIFAR100(data_dir, train=False, download=False,transform=test_trsfm)  
 
-        if training:  # 训练阶段执行
-            dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=TwoCropsTransform(train_trsfm), imb_type=imb_type,imb_factor=imb_factor)  # 源代码download=True，但是我已经下载了，所以改成False
+        if training:  
+            dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=TwoCropsTransform(train_trsfm), imb_type=imb_type,imb_factor=imb_factor)  
             val_dataset = test_dataset
-        else:  # test.py文件执行
+        else:  
             dataset = test_dataset
             val_dataset = None
 
         self.dataset = dataset
         self.val_dataset = val_dataset
 
-        num_classes = len(np.unique(dataset.targets))  # 类别数量
+        num_classes = len(np.unique(dataset.targets)) 
         assert num_classes == 100
 
         cls_num_list = [0] * num_classes
         for label in dataset.targets:
-            cls_num_list[label] += 1  # 每个类别下的数量
+            cls_num_list[label] += 1
 
         self.cls_num_list = cls_num_list
 
-        if balanced:  # 不平衡环境下未执行
+        if balanced: 
             if training:
                 buckets = [[] for _ in range(num_classes)]
                 for idx, label in enumerate(dataset.targets):
@@ -337,10 +333,8 @@ class selfsupcon_ImbalanceCIFAR100DataLoader(DataLoader):
 
         super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler)  # Note that sampler does not apply to validation set
 
-    def split_validation(self):  # 此函数在train.py文件的 def main(config)函数中被调用
-        # If you do not want to validate:
-        # return None
-        # If you want to validate:
+    def split_validation(self):  
+
         return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
 class MCE_ImbalanceCIFAR100DataLoader(DataLoader):
@@ -348,7 +342,6 @@ class MCE_ImbalanceCIFAR100DataLoader(DataLoader):
     Imbalance Cifar100 Data Loader
     """
 
-    # batch_size=128         num_workers被传入的参数改为0
     def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False,retain_epoch_size=True, imb_type='exp', imb_factor=0.01):
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                          std=[0.2023, 0.1994, 0.2010])
@@ -356,16 +349,15 @@ class MCE_ImbalanceCIFAR100DataLoader(DataLoader):
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(15),
+          
             transforms.ToTensor(),
             normalize,
         ])
 
         train_trsfm2 = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
-            transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.RandomApply([GaussianBlur([.1, 2.])], p=0.2),
             transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(15),
             transforms.ToTensor(),
             normalize,
         ])
@@ -374,28 +366,29 @@ class MCE_ImbalanceCIFAR100DataLoader(DataLoader):
             transforms.ToTensor(),
             normalize,
         ])
-        test_dataset = datasets.CIFAR100(data_dir, train=False, download=False,transform=test_trsfm)  # test set ，源代码download=True，但是我已经下载了，所以改成False
-
-        if training:  # 训练阶段执行
-            dataset = IMBALANCECIFAR100(data_dir, train=True, download=False, transform=MCE_TwoCropsTransform(train_trsfm1,train_trsfm2,train_trsfm2), imb_type=imb_type,imb_factor=imb_factor)
+        test_dataset = datasets.CIFAR100(data_dir, train=False, download=True,transform=test_trsfm)  
+      
+        if training:  
+            dataset = IMBALANCECIFAR100(data_dir, train=True, download=True, transform=MCE_TwoCropsTransform(train_trsfm1,train_trsfm2,train_trsfm2), imb_type=imb_type,imb_factor=imb_factor)
+        
             val_dataset = test_dataset
-        else:  # test.py文件执行
+        else:  
             dataset = test_dataset
             val_dataset = None
 
         self.dataset = dataset
         self.val_dataset = val_dataset
 
-        num_classes = len(np.unique(dataset.targets))  # 类别数量
+        num_classes = len(np.unique(dataset.targets))
         assert num_classes == 100
 
         cls_num_list = [0] * num_classes
         for label in dataset.targets:
-            cls_num_list[label] += 1  # 每个类别下的数量
+            cls_num_list[label] += 1 
 
         self.cls_num_list = cls_num_list
 
-        if balanced:  # 不平衡环境下未执行
+        if balanced:
             if training:
                 buckets = [[] for _ in range(num_classes)]
                 for idx, label in enumerate(dataset.targets):
@@ -416,145 +409,145 @@ class MCE_ImbalanceCIFAR100DataLoader(DataLoader):
 
         super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler)  # Note that sampler does not apply to validation set
 
-    def split_validation(self):  # 此函数在train.py文件的 def main(config)函数中被调用
+    def split_validation(self):  
         # If you do not want to validate:
         # return None
         # If you want to validate:
         return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
-class  TestAgnosticImbalanceCIFAR100DataLoader(DataLoader):
-    """
-    Imbalance Cifar100 Data Loader
-    """
-    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, imb_type='exp', imb_factor=0.01, test_imb_factor=0, reverse=False):
-        normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-            std=[0.2023, 0.1994, 0.2010])
-        train_trsfm = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        test_trsfm = transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])
-        test_dataset = datasets.CIFAR100(data_dir, train=False, download=True, transform=test_trsfm) # test set
+# class  TestAgnosticImbalanceCIFAR100DataLoader(DataLoader):
+#     """
+#     Imbalance Cifar100 Data Loader
+#     """
+#     def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, imb_type='exp', imb_factor=0.01, test_imb_factor=0, reverse=False):
+#         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+#             std=[0.2023, 0.1994, 0.2010])
+#         train_trsfm = transforms.Compose([
+#             transforms.RandomCrop(32, padding=4),
+#             transforms.RandomHorizontalFlip(),
+#             transforms.RandomRotation(15),
+#             transforms.ToTensor(),
+#             normalize,
+#         ])
+#         test_trsfm = transforms.Compose([
+#             transforms.ToTensor(),
+#             normalize,
+#         ])
+#         test_dataset = datasets.CIFAR100(data_dir, train=False, download=True, transform=test_trsfm) # test set
         
-        if training:
-            dataset = IMBALANCECIFAR100(data_dir, train=True, download=True, transform=train_trsfm, imb_type=imb_type, imb_factor=imb_factor)
-            val_dataset = test_dataset
-        else:
-            if test_imb_factor!=0:
-                dataset = IMBALANCECIFAR100(data_dir, train=False, download=True, transform=train_trsfm, imb_type=imb_type, imb_factor=test_imb_factor, reverse=reverse)
-            else:
-                dataset = test_dataset
-            val_dataset = None
+#         if training:
+#             dataset = IMBALANCECIFAR100(data_dir, train=True, download=True, transform=train_trsfm, imb_type=imb_type, imb_factor=imb_factor)
+#             val_dataset = test_dataset
+#         else:
+#             if test_imb_factor!=0:
+#                 dataset = IMBALANCECIFAR100(data_dir, train=False, download=True, transform=train_trsfm, imb_type=imb_type, imb_factor=test_imb_factor, reverse=reverse)
+#             else:
+#                 dataset = test_dataset
+#             val_dataset = None
 
-        self.dataset = dataset
-        self.val_dataset = val_dataset
+#         self.dataset = dataset
+#         self.val_dataset = val_dataset
 
-        num_classes = len(np.unique(dataset.targets))
-        assert num_classes == 100
+#         num_classes = len(np.unique(dataset.targets))
+#         assert num_classes == 100
 
-        cls_num_list = [0] * num_classes
-        for label in dataset.targets:
-            cls_num_list[label] += 1
+#         cls_num_list = [0] * num_classes
+#         for label in dataset.targets:
+#             cls_num_list[label] += 1
 
-        self.cls_num_list = cls_num_list
+#         self.cls_num_list = cls_num_list
 
-        if balanced:
-            if training:
-                buckets = [[] for _ in range(num_classes)]
-                for idx, label in enumerate(dataset.targets):
-                    buckets[label].append(idx)
-                sampler = BalancedSampler(buckets, retain_epoch_size)
-                shuffle = False
-            else:
-                print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
-        else:
-            sampler = None
+#         if balanced:
+#             if training:
+#                 buckets = [[] for _ in range(num_classes)]
+#                 for idx, label in enumerate(dataset.targets):
+#                     buckets[label].append(idx)
+#                 sampler = BalancedSampler(buckets, retain_epoch_size)
+#                 shuffle = False
+#             else:
+#                 print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
+#         else:
+#             sampler = None
         
-        self.shuffle = shuffle
-        self.init_kwargs = {
-            'batch_size': batch_size,
-            'shuffle': self.shuffle,
-            'num_workers': num_workers
-        }
+#         self.shuffle = shuffle
+#         self.init_kwargs = {
+#             'batch_size': batch_size,
+#             'shuffle': self.shuffle,
+#             'num_workers': num_workers
+#         }
 
-        super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
+#         super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
 
-    def split_validation(self):
-        # If you do not want to validate:
-        # return None
-        # If you want to validate:
-        return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
+#     def split_validation(self):
+#         # If you do not want to validate:
+#         # return None
+#         # If you want to validate:
+#         return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
-class ImbalanceCIFAR10DataLoader(DataLoader):
-    """
-    Imbalance Cifar10 Data Loader
-    """
-    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, imb_factor=0.01):
-        normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-            std=[0.2023, 0.1994, 0.2010])
-        train_trsfm = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        test_trsfm = transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])
+# class ImbalanceCIFAR10DataLoader(DataLoader):
+#     """
+#     Imbalance Cifar10 Data Loader
+#     """
+#     def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1, training=True, balanced=False, retain_epoch_size=True, imb_factor=0.01):
+#         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+#             std=[0.2023, 0.1994, 0.2010])
+#         train_trsfm = transforms.Compose([
+#             transforms.RandomCrop(32, padding=4),
+#             transforms.RandomHorizontalFlip(),
+#             transforms.RandomRotation(15),
+#             transforms.ToTensor(),
+#             normalize,
+#         ])
+#         test_trsfm = transforms.Compose([
+#             transforms.ToTensor(),
+#             normalize,
+#         ])
         
-        if training:
-            dataset = IMBALANCECIFAR10(data_dir, train=True, download=False, transform=train_trsfm, imb_factor=imb_factor)#源代码是download=True
-            val_dataset = datasets.CIFAR10(data_dir, train=False, download=True, transform=test_trsfm) # test set
-        else:
-            dataset = datasets.CIFAR10(data_dir, train=False, download=False, transform=test_trsfm) # test set # 源代码是download=True
-            val_dataset = None
+#         if training:
+#             dataset = IMBALANCECIFAR10(data_dir, train=True, download=False, transform=train_trsfm, imb_factor=imb_factor)
+#             val_dataset = datasets.CIFAR10(data_dir, train=False, download=True, transform=test_trsfm) # test set
+#         else:
+#             dataset = datasets.CIFAR10(data_dir, train=False, download=False, transform=test_trsfm) # test set 
+#             val_dataset = None
 
-        self.dataset = dataset
-        self.val_dataset = val_dataset
+#         self.dataset = dataset
+#         self.val_dataset = val_dataset
 
-        num_classes = len(np.unique(dataset.targets))
-        assert num_classes == 10
+#         num_classes = len(np.unique(dataset.targets))
+#         assert num_classes == 10
 
-        cls_num_list = [0] * num_classes
-        for label in dataset.targets:
-            cls_num_list[label] += 1
+#         cls_num_list = [0] * num_classes
+#         for label in dataset.targets:
+#             cls_num_list[label] += 1
 
-        self.cls_num_list = cls_num_list
+#         self.cls_num_list = cls_num_list
 
-        if balanced:
-            if training:
-                buckets = [[] for _ in range(num_classes)]
-                for idx, label in enumerate(dataset.targets):
-                    buckets[label].append(idx)
-                sampler = BalancedSampler(buckets, retain_epoch_size)
-                shuffle = False
-            else:
-                print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
-        else:
-            sampler = None
+#         if balanced:
+#             if training:
+#                 buckets = [[] for _ in range(num_classes)]
+#                 for idx, label in enumerate(dataset.targets):
+#                     buckets[label].append(idx)
+#                 sampler = BalancedSampler(buckets, retain_epoch_size)
+#                 shuffle = False
+#             else:
+#                 print("Test set will not be evaluated with balanced sampler, nothing is done to make it balanced")
+#         else:
+#             sampler = None
         
-        self.shuffle = shuffle
-        self.init_kwargs = {
-            'batch_size': batch_size,
-            'shuffle': self.shuffle,
-            'num_workers': num_workers
-        }
+#         self.shuffle = shuffle
+#         self.init_kwargs = {
+#             'batch_size': batch_size,
+#             'shuffle': self.shuffle,
+#             'num_workers': num_workers
+#         }
 
-        super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
+#         super().__init__(dataset=self.dataset, **self.init_kwargs, sampler=sampler) # Note that sampler does not apply to validation set
 
-    def split_validation(self):
-        # If you do not want to validate:
-        # return None
-        # If you want to validate:
-        return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
+#     def split_validation(self):
+#         # If you do not want to validate:
+#         # return None
+#         # If you want to validate:
+#         return DataLoader(dataset=self.val_dataset, **self.init_kwargs)
 
 class MCE_ImbalanceCIFAR10DataLoader(DataLoader):
     """
@@ -568,6 +561,7 @@ class MCE_ImbalanceCIFAR10DataLoader(DataLoader):
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(15),
+            RandAugment(num_ops=1, magnitude=9),  # add by wyd (randaug)
             transforms.ToTensor(),
             normalize,
         ])
@@ -588,10 +582,10 @@ class MCE_ImbalanceCIFAR10DataLoader(DataLoader):
         ])
 
         if training:
-            dataset = IMBALANCECIFAR10(data_dir, train=True, download=False, transform=MCE_TwoCropsTransform(train_trsfm1,train_trsfm2,train_trsfm2),imb_factor=imb_factor)  # 源代码是download=True
+            dataset = IMBALANCECIFAR10(data_dir, train=True, download=False, transform=MCE_TwoCropsTransform(train_trsfm1,train_trsfm2,train_trsfm2),imb_factor=imb_factor) 
             val_dataset = datasets.CIFAR10(data_dir, train=False, download=True, transform=test_trsfm)  # test set
         else:
-            dataset = datasets.CIFAR10(data_dir, train=False, download=False,transform=test_trsfm)  # test set # 源代码是download=True
+            dataset = datasets.CIFAR10(data_dir, train=False, download=False,transform=test_trsfm)  
             val_dataset = None
 
         self.dataset = dataset

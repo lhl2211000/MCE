@@ -65,9 +65,7 @@ data_txt
 * For the training on Places-LT, we follow previous methods and use [the pre-trained ResNet-152 model](https://github.com/zhmiao/OpenLongTailRecognition-OLTR).
 * Please download the checkpoint. Unzip and move the checkpoint files to `model/pretrained_model_places/`.
 
-## Results and Pretrained Models
-
-The corresponding checkpoints can be found in `checkpoints/`.
+## Results
 
 ### CIFAR100-LT and CIFAR10-LT (ResNet32)
 

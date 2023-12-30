@@ -297,266 +297,238 @@ class Trainer(BaseTrainer):
         return 1 + loss_scl / current_batch_size   
 
 
-    # # zsw 没用到
-    # def compute_supervised_contrastive_loss_k1(self, features ,feat_stop_grad,view_features,view_feat_sg, target,k):  
-    #     cls_idx_list = []
-    #     for _ in range(len(self.cls_num_list)):  
-    #         cls_idx_list.append([])
 
-    #     current_batch_size = len(features)
-    #     for j in range(current_batch_size):
-    #         cls_idx_list[target[j].to(torch.long)].append(j)
+    def compute_supervised_contrastive_loss_k1(self, features ,feat_stop_grad,view_features,view_feat_sg, target,k):
+        cls_idx_list = []
+        for _ in range(len(self.cls_num_list)):
+            cls_idx_list.append([])
 
-    #     loss_scl = 0.0
-    #     loss_scl_unsupervised =0.0
+        current_batch_size = len(features)
+        for j in range(current_batch_size):
+            cls_idx_list[target[j].to(torch.long)].append(j)
 
-    #     for i in range(current_batch_size):
-    #         current_cls_list = cls_idx_list[target[i].to(torch.long)]
-    #         if len(current_cls_list) >= 2:  
+        loss_scl = 0.0
+        loss_scl_unsupervised =0.0
+
+        for i in range(current_batch_size):
+            current_cls_list = cls_idx_list[target[i].to(torch.long)]
+            if len(current_cls_list) >= 2:
              
-    #             if len(current_cls_list) <= k + 1:  
-    #                 for cu in current_cls_list:
-    #                     if cu != i:
-    #                         loss_scl = loss_scl - \
-    #                                      (self.criterion_scl(features[i][0],feat_stop_grad[cu][0]).mean() + self.criterion_scl(features[cu][0], feat_stop_grad[i][0]).mean()) * 0.5 \
-    #                                    - (self.criterion_scl(features[i][1],feat_stop_grad[cu][1]).mean() + self.criterion_scl(features[cu][1], feat_stop_grad[i][1]).mean()) * 0.5 \
-    #                                    - (self.criterion_scl(features[i][2],feat_stop_grad[cu][2]).mean() + self.criterion_scl(features[cu][2], feat_stop_grad[i][2]).mean()) * 0.5
+                if len(current_cls_list) <= k + 1:
+                    for cu in current_cls_list:
+                        if cu != i:
+                            loss_scl = loss_scl - \
+                                         (self.criterion_scl(features[i][0],feat_stop_grad[cu][0]).mean() + self.criterion_scl(features[cu][0], feat_stop_grad[i][0]).mean()) * 0.5 \
+                                       - (self.criterion_scl(features[i][1],feat_stop_grad[cu][1]).mean() + self.criterion_scl(features[cu][1], feat_stop_grad[i][1]).mean()) * 0.5 \
+                                       - (self.criterion_scl(features[i][2],feat_stop_grad[cu][2]).mean() + self.criterion_scl(features[cu][2], feat_stop_grad[i][2]).mean()) * 0.5
 
-    #             else:  
-    #                 l1=0.0
-    #                 positive_samples_list_1 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_1.append(cc)
-    #                     if len(positive_samples_list_1) == k:
-    #                         break
+                else:
+                    l1=0.0
+                    positive_samples_list_1 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_1.append(cc)
+                        if len(positive_samples_list_1) == k:
+                            break
 
-    #                 for p in positive_samples_list_1:
-    #                     l1 = l1 - (self.criterion_scl(features[i][0],feat_stop_grad[p][0]).mean() + self.criterion_scl(features[p][0], feat_stop_grad[i][0]).mean()) * 0.5
-    #                 random.shuffle(current_cls_list)
+                    for p in positive_samples_list_1:
+                        l1 = l1 - (self.criterion_scl(features[i][0],feat_stop_grad[p][0]).mean() + self.criterion_scl(features[p][0], feat_stop_grad[i][0]).mean()) * 0.5
+                    random.shuffle(current_cls_list)
 
-    #                 l2=0.0
-    #                 positive_samples_list_2 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_2.append(cc)
-    #                     if len(positive_samples_list_2) == k:
-    #                         break
+                    l2=0.0
+                    positive_samples_list_2 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_2.append(cc)
+                        if len(positive_samples_list_2) == k:
+                            break
 
-    #                 for p in positive_samples_list_2:    
-    #                     l2 = l2 - (self.criterion_scl(features[i][1],feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5
-    #                 random.shuffle(current_cls_list)
+                    for p in positive_samples_list_2:
+                        l2 = l2 - (self.criterion_scl(features[i][1],feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5
+                    random.shuffle(current_cls_list)
 
-    #                 l3=0.0
-    #                 positive_samples_list_3 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_3.append(cc)
-    #                     if len(positive_samples_list_3) == k:
-    #                         break
+                    l3=0.0
+                    positive_samples_list_3 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_3.append(cc)
+                        if len(positive_samples_list_3) == k:
+                            break
 
-    #                 for p in positive_samples_list_3:
-    #                     l3 = l3 - (self.criterion_scl(features[i][2],feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5
+                    for p in positive_samples_list_3:
+                        l3 = l3 - (self.criterion_scl(features[i][2],feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5
 
 
                  
-    #                 loss_scl = loss_scl+l1+l2+l3
-    #         elif len(current_cls_list)==1:
-    #             loss_scl_unsupervised =loss_scl_unsupervised - \
-    #                                    (self.criterion_scl(features[i][0],view_feat_sg[i][0]).mean() + self.criterion_scl(view_features[i][0], feat_stop_grad[i][0]).mean()) * 0.5 \
-    #                                   -(self.criterion_scl(features[i][1],view_feat_sg[i][1]).mean() + self.criterion_scl(view_features[i][1], feat_stop_grad[i][1]).mean()) * 0.5 \
-    #                                   -(self.criterion_scl(features[i][2],view_feat_sg[i][2]).mean() + self.criterion_scl(view_features[i][2], feat_stop_grad[i][2]).mean()) * 0.5
-    #     return 1 + (loss_scl+ loss_scl_unsupervised) / current_batch_size
+                    loss_scl = loss_scl+l1+l2+l3
+            elif len(current_cls_list)==1:
+                loss_scl_unsupervised =loss_scl_unsupervised - \
+                                       (self.criterion_scl(features[i][0],view_feat_sg[i][0]).mean() + self.criterion_scl(view_features[i][0], feat_stop_grad[i][0]).mean()) * 0.5 \
+                                      -(self.criterion_scl(features[i][1],view_feat_sg[i][1]).mean() + self.criterion_scl(view_features[i][1], feat_stop_grad[i][1]).mean()) * 0.5 \
+                                      -(self.criterion_scl(features[i][2],view_feat_sg[i][2]).mean() + self.criterion_scl(view_features[i][2], feat_stop_grad[i][2]).mean()) * 0.5
+        return 1 + (loss_scl+ loss_scl_unsupervised) / current_batch_size
 
-    # """
-    # # balanced supervised contrastive loss
-    # """
-    # # zsw 没用到
-    # def compute_bal_supervised_contrastive_loss(self, features, feat_stop_grad, view_features, view_feat_sg, target,k):  # features.shape=128*3*48  ,features_view,feat_view_stop_grad
+    """
+    # balanced supervised contrastive loss
+    """
+    def compute_bal_supervised_contrastive_loss(self, features, feat_stop_grad, view_features, view_feat_sg, target,k):  # features.shape=128*3*48  ,features_view,feat_view_stop_grad
        
-    #     cls_idx_list = []
-    #     for _ in range(len(self.cls_num_list)): 
-    #         cls_idx_list.append([])
+        cls_idx_list = []
+        for _ in range(len(self.cls_num_list)):
+            cls_idx_list.append([])
 
-    #     current_batch_size = len(features)
-    #     for j in range(current_batch_size):
-    #         cls_idx_list[target[j].to(torch.long)].append(j)
+        current_batch_size = len(features)
+        for j in range(current_batch_size):
+            cls_idx_list[target[j].to(torch.long)].append(j)
 
-    #     loss_scl = 0.0
+        loss_scl = 0.0
        
-    #     loss_scl_unsupervised= 0.0
+        loss_scl_unsupervised= 0.0
         
-    #     for i in range(current_batch_size):
-    #         e2 = torch.log(self.prior[target[i]]+1e-9)
-    #         e3 = torch.log(self.prior[target[i]]+1e-9)-2*torch.log(self.inverse_prior1[target[i]]+1e-9)
-    #         u1 = (self.criterion_scl(features[i][0], view_feat_sg[i][0]).mean() + self.criterion_scl(view_features[i][0],feat_stop_grad[i][0]).mean()) * 0.5
-    #         u2 = (self.criterion_scl(features[i][1], view_feat_sg[i][1]).mean() + self.criterion_scl(view_features[i][1],feat_stop_grad[i][1]).mean()) * 0.5-e2
-    #         u3 = (self.criterion_scl(features[i][2], view_feat_sg[i][2]).mean() + self.criterion_scl(view_features[i][2],feat_stop_grad[i][2]).mean()) * 0.5-e3
-    #         loss_scl_unsupervised =loss_scl_unsupervised  -u1-u2-u3
-    #         current_cls_list = cls_idx_list[target[i].to(torch.long)]
-    #         if len(current_cls_list) >= 2:  
-    #             # select all idx for current_cls_list
-    #             if len(current_cls_list) <= k + 1:  
-    #                 for cu in current_cls_list:
-    #                     if cu != i:
-    #                         s1=(self.criterion_scl(features[i][0],feat_stop_grad[cu][0]).mean() + self.criterion_scl(features[cu][0], feat_stop_grad[i][0]).mean()) * 0.5
-    #                         s2=(self.criterion_scl(features[i][1],feat_stop_grad[cu][1]).mean() + self.criterion_scl(features[cu][1], feat_stop_grad[i][1]).mean()) * 0.5-e2
-    #                         s3=(self.criterion_scl(features[i][2],feat_stop_grad[cu][2]).mean() + self.criterion_scl(features[cu][2], feat_stop_grad[i][2]).mean()) * 0.5-e3
-    #                         loss_scl = loss_scl -s1-s2-s3
+        for i in range(current_batch_size):
+            e2 = torch.log(self.prior[target[i]]+1e-9)
+            e3 = torch.log(self.prior[target[i]]+1e-9)-2*torch.log(self.inverse_prior1[target[i]]+1e-9)
+            u1 = (self.criterion_scl(features[i][0], view_feat_sg[i][0]).mean() + self.criterion_scl(view_features[i][0],feat_stop_grad[i][0]).mean()) * 0.5
+            u2 = (self.criterion_scl(features[i][1], view_feat_sg[i][1]).mean() + self.criterion_scl(view_features[i][1],feat_stop_grad[i][1]).mean()) * 0.5-e2
+            u3 = (self.criterion_scl(features[i][2], view_feat_sg[i][2]).mean() + self.criterion_scl(view_features[i][2],feat_stop_grad[i][2]).mean()) * 0.5-e3
+            loss_scl_unsupervised =loss_scl_unsupervised  -u1-u2-u3
+            current_cls_list = cls_idx_list[target[i].to(torch.long)]
+            if len(current_cls_list) >= 2:
+                # select all idx for current_cls_list
+                if len(current_cls_list) <= k + 1:
+                    for cu in current_cls_list:
+                        if cu != i:
+                            s1=(self.criterion_scl(features[i][0],feat_stop_grad[cu][0]).mean() + self.criterion_scl(features[cu][0], feat_stop_grad[i][0]).mean()) * 0.5
+                            s2=(self.criterion_scl(features[i][1],feat_stop_grad[cu][1]).mean() + self.criterion_scl(features[cu][1], feat_stop_grad[i][1]).mean()) * 0.5-e2
+                            s3=(self.criterion_scl(features[i][2],feat_stop_grad[cu][2]).mean() + self.criterion_scl(features[cu][2], feat_stop_grad[i][2]).mean()) * 0.5-e3
+                            loss_scl = loss_scl -s1-s2-s3
                 
-    #             else:  
-    #                 l1 = 0.0
-    #                 positive_samples_list_1 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_1.append(cc)
-    #                     if len(positive_samples_list_1) == k:
-    #                         break
+                else:
+                    l1 = 0.0
+                    positive_samples_list_1 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_1.append(cc)
+                        if len(positive_samples_list_1) == k:
+                            break
 
-    #                 for p in positive_samples_list_1:
+                    for p in positive_samples_list_1:
                         
-    #                     l1 = l1 - (self.criterion_scl(features[i][0], feat_stop_grad[p][0]).mean() + self.criterion_scl(features[p][0], feat_stop_grad[i][0]).mean()) * 0.5
+                        l1 = l1 - (self.criterion_scl(features[i][0], feat_stop_grad[p][0]).mean() + self.criterion_scl(features[p][0], feat_stop_grad[i][0]).mean()) * 0.5
                   
-    #                 random.shuffle(current_cls_list)
+                    random.shuffle(current_cls_list)
 
-    #                 l2 = 0.0
-    #                 positive_samples_list_2 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_2.append(cc)
-    #                     if len(positive_samples_list_2) == k:
-    #                         break
+                    l2 = 0.0
+                    positive_samples_list_2 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_2.append(cc)
+                        if len(positive_samples_list_2) == k:
+                            break
 
-    #                 for p in positive_samples_list_2:
+                    for p in positive_samples_list_2:
                        
-    #                     l2 = l2 - (self.criterion_scl(features[i][1], feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5-e2
-    #                 # l2 = l2 / (k + 1)
-    #                 random.shuffle(current_cls_list)
+                        l2 = l2 - (self.criterion_scl(features[i][1], feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5-e2
+                    # l2 = l2 / (k + 1)
+                    random.shuffle(current_cls_list)
 
-    #                 l3 = 0.0
-    #                 positive_samples_list_3 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_3.append(cc)
-    #                     if len(positive_samples_list_3) == k:
-    #                         break
+                    l3 = 0.0
+                    positive_samples_list_3 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_3.append(cc)
+                        if len(positive_samples_list_3) == k:
+                            break
 
-    #                 for p in positive_samples_list_3:
+                    for p in positive_samples_list_3:
                        
-    #                     l3 = l3 - (self.criterion_scl(features[i][2], feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5-e3
-    #                 # l3=l3/k
+                        l3 = l3 - (self.criterion_scl(features[i][2], feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5-e3
+                    # l3=l3/k
 
-    #                 # loss_scl = loss_scl / k
-    #                 loss_scl = loss_scl + l1 + l2 + l3
+                    # loss_scl = loss_scl / k
+                    loss_scl = loss_scl + l1 + l2 + l3
 
-    #     return ( loss_scl / current_batch_size + loss_scl_unsupervised   / current_batch_size)/2
+        return ( loss_scl / current_batch_size + loss_scl_unsupervised   / current_batch_size)/2
 
-    # """
-    # # selfsupcon
-    # """
-    # # zsw 没用到
-    # def compute_self_supervised_contrastive_loss(self, features, feat_stop_grad, views_features, views_feat_stop_grad):  # features.shape=128*3*48  ,features_view,feat_view_stop_grad
-    #     loss_scl_unsupervised =  - ( self.criterion_scl_unsupervised(features,views_feat_stop_grad).mean() +  self.criterion_scl_unsupervised(views_features,feat_stop_grad).mean()) * 0.5
+    """
+    # selfsupcon
+    """
+    def compute_self_supervised_contrastive_loss(self, features, feat_stop_grad, views_features, views_feat_stop_grad):  # features.shape=128*3*48  ,features_view,feat_view_stop_grad
+        loss_scl_unsupervised =  - ( self.criterion_scl_unsupervised(features,views_feat_stop_grad).mean() +  self.criterion_scl_unsupervised(views_features,feat_stop_grad).mean()) * 0.5
 
-    #     return  loss_scl_unsupervised
+        return  loss_scl_unsupervised
 
-    # """
-    # # two-stage training:SelfSupCon+SupCon
-    # """
-    # # zsw 没用到
-    # def two_stage_compute_supervised_contrastive_loss(self, features, feat_stop_grad, target,k):  # features.shape=128*3*48  ,features_view,feat_view_stop_grad
-    #     cls_idx_list = []
-    #     for _ in range(len(self.cls_num_list)): 
-    #         cls_idx_list.append([])
+    """
+    # two-stage training:SelfSupCon+SupCon
+    """
+    def two_stage_compute_supervised_contrastive_loss(self, features, feat_stop_grad, target,k):  # features.shape=128*3*48  ,features_view,feat_view_stop_grad
+        cls_idx_list = []
+        for _ in range(len(self.cls_num_list)):
+            cls_idx_list.append([])
 
-    #     current_batch_size = len(features)
-    #     for j in range(current_batch_size):
-    #         cls_idx_list[target[j].to(torch.long)].append(j)
+        current_batch_size = len(features)
+        for j in range(current_batch_size):
+            cls_idx_list[target[j].to(torch.long)].append(j)
 
-    #     loss_scl = 0.0
+        loss_scl = 0.0
       
-    #     for i in range(current_batch_size):
-    #         current_cls_list = cls_idx_list[target[i].to(torch.long)]
-    #         if len(current_cls_list) >= 2:  
-    #             if len(current_cls_list) <= k + 1:  
-    #                 for cu in current_cls_list:
-    #                     if cu != i:
-    #                         loss_scl = loss_scl - \
-    #                                      (self.criterion_scl(features[i][0],feat_stop_grad[cu][0]).mean() + self.criterion_scl(features[cu][0], feat_stop_grad[i][0]).mean()) * 0.5 \
-    #                                    - (self.criterion_scl(features[i][1],feat_stop_grad[cu][1]).mean() + self.criterion_scl(features[cu][1], feat_stop_grad[i][1]).mean()) * 0.5 \
-    #                                    - (self.criterion_scl(features[i][2],feat_stop_grad[cu][2]).mean() + self.criterion_scl(features[cu][2], feat_stop_grad[i][2]).mean()) * 0.5
+        for i in range(current_batch_size):
+            current_cls_list = cls_idx_list[target[i].to(torch.long)]
+            if len(current_cls_list) >= 2:
+                if len(current_cls_list) <= k + 1:
+                    for cu in current_cls_list:
+                        if cu != i:
+                            loss_scl = loss_scl - \
+                                         (self.criterion_scl(features[i][0],feat_stop_grad[cu][0]).mean() + self.criterion_scl(features[cu][0], feat_stop_grad[i][0]).mean()) * 0.5 \
+                                       - (self.criterion_scl(features[i][1],feat_stop_grad[cu][1]).mean() + self.criterion_scl(features[cu][1], feat_stop_grad[i][1]).mean()) * 0.5 \
+                                       - (self.criterion_scl(features[i][2],feat_stop_grad[cu][2]).mean() + self.criterion_scl(features[cu][2], feat_stop_grad[i][2]).mean()) * 0.5
 
-    #             else:  
-    #                 l1=0.0
-    #                 positive_samples_list_1 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_1.append(cc)
-    #                     if len(positive_samples_list_1) == k:
-    #                         break
+                else:
+                    l1=0.0
+                    positive_samples_list_1 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_1.append(cc)
+                        if len(positive_samples_list_1) == k:
+                            break
 
-    #                 for p in positive_samples_list_1:
-    #                     l1 = l1 - (self.criterion_scl(features[i][0],feat_stop_grad[p][0]).mean() + self.criterion_scl(features[p][0], feat_stop_grad[i][0]).mean()) * 0.5
-    #                 # l1=l1/(k+2)
-    #                 random.shuffle(current_cls_list)
+                    for p in positive_samples_list_1:
+                        l1 = l1 - (self.criterion_scl(features[i][0],feat_stop_grad[p][0]).mean() + self.criterion_scl(features[p][0], feat_stop_grad[i][0]).mean()) * 0.5
+                    # l1=l1/(k+2)
+                    random.shuffle(current_cls_list)
 
-    #                 l2=0.0
-    #                 positive_samples_list_2 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_2.append(cc)
-    #                     if len(positive_samples_list_2) == k:
-    #                         break
+                    l2=0.0
+                    positive_samples_list_2 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_2.append(cc)
+                        if len(positive_samples_list_2) == k:
+                            break
 
-    #                 for p in positive_samples_list_2:
-    #                     # loss_scl = loss_scl - (self.criterion_scl(features[i][1],feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5
-    #                     l2 = l2 - (self.criterion_scl(features[i][1],feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5
-    #                 # l2 = l2 / (k + 1)
-    #                 random.shuffle(current_cls_list)
+                    for p in positive_samples_list_2:
+                        # loss_scl = loss_scl - (self.criterion_scl(features[i][1],feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5
+                        l2 = l2 - (self.criterion_scl(features[i][1],feat_stop_grad[p][1]).mean() + self.criterion_scl(features[p][1], feat_stop_grad[i][1]).mean()) * 0.5
+                    # l2 = l2 / (k + 1)
+                    random.shuffle(current_cls_list)
 
-    #                 l3=0.0
-    #                 positive_samples_list_3 = []
-    #                 for cc in current_cls_list:
-    #                     if cc != i:
-    #                         positive_samples_list_3.append(cc)
-    #                     if len(positive_samples_list_3) == k:
-    #                         break
+                    l3=0.0
+                    positive_samples_list_3 = []
+                    for cc in current_cls_list:
+                        if cc != i:
+                            positive_samples_list_3.append(cc)
+                        if len(positive_samples_list_3) == k:
+                            break
 
-    #                 for p in positive_samples_list_3:
-    #                     # loss_scl = loss_scl - (self.criterion_scl(features[i][2],feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5
-    #                     l3 = l3 - (self.criterion_scl(features[i][2],feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5
-    #                 # l3=l3/k
+                    for p in positive_samples_list_3:
+                        # loss_scl = loss_scl - (self.criterion_scl(features[i][2],feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5
+                        l3 = l3 - (self.criterion_scl(features[i][2],feat_stop_grad[p][2]).mean() + self.criterion_scl(features[p][2], feat_stop_grad[i][2]).mean()) * 0.5
+                    # l3=l3/k
 
-    #                 # loss_scl = loss_scl / k
-    #                 loss_scl = loss_scl+l1+l2+l3
+                    # loss_scl = loss_scl / k
+                    loss_scl = loss_scl+l1+l2+l3
 
-    #     return 1 + loss_scl / current_batch_size  # + loss_scl_unsupervised
-    # # zsw 没用到
-    # def adjust_learning_rate_simsiam(self,optimizer, init_lr, epoch, total_epochs):
-       
-    #     step1=160
-    #     step2=180
-    #     warmup_epoch=5
-    #     gamma=0.1
-    #     print("Scheduler step1, step2, warmup_epoch, gamma:",( step1,  step2, warmup_epoch, gamma))
+        return 1 + loss_scl / current_batch_size  # + loss_scl_unsupervised
 
-    #     if epoch >= 181:
-    #         cur_lr = gamma * gamma*0.1
-    #     elif epoch >= 161:
-    #         cur_lr = gamma*0.1
-    #     else:
-    #         cur_lr = 0.1
-
-    #     """Warmup"""
-    #     warmup_epoch = warmup_epoch
-    #     if epoch < warmup_epoch:
-    #         cur_lr = cur_lr * float(epoch) / warmup_epoch
-
-    #     for param_group in optimizer.param_groups:
-    #         if 'fix_lr' in param_group and param_group['fix_lr']:
-    #             param_group['lr'] = init_lr
-    #         else:
-    #             param_group['lr'] = cur_lr
 
 
     def _train_epoch(self, epoch):

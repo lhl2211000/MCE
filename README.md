@@ -20,14 +20,13 @@ pip install -r requirements.txt
 ```
 ## Data Preparation
 
-  - Download [CIFAR100/10-LT](http://www.image-net.org/) (can also  be downloaded automatically by set the `downloade=True` in `data_loader/cifar_data_loaders.py`)
+  - Download [CIFAR100/10-LT](http://www.image-net.org/) (These datasets can also  be downloaded automatically by set the `downloade=True` in `data_loader/cifar_data_loaders.py`)
   - Download [iNaturalist 2018](http://www.image-net.org/)
 
-  - For ImageNet_LT and Places_LT preparation,  we follow the instruction from this [link](https://github.com/zhmiao/OpenLongTailRecognition-OLTR):
-
+  - For ImageNet_LT and Places_LT preparation,  we follow the instruction from this [link](https://github.com/zhmiao/OpenLongTailRecognition-OLTR)
 
   - Please download the [ImageNet_2014](http://image-net.org/index) and [Places_365](http://places2.csail.mit.edu/download.html) (256x256 version).
-  Please also change the `data_root` in `main.py` accordingly.
+  
   - Then, put them into `data` dictionary:
   ```
   data
@@ -46,20 +45,21 @@ pip install -r requirements.txt
   └── iNaturalist2018 
      ├── test2018
      └── train_val2018
-```
+  ```
+- Please also change the `data_dir` in corresponding `config.json` accordingly.
+- Please download ImageNet-LT and Places-LT from [here](https://drive.google.com/drive/folders/1j7Nkfe6ZhzKFXePHdsseeeGI877Xu1yf), and put the downloaded files into the `data_txt` directory like this:
 
-  - Please download ImageNet-LT and Places-LT from [here](https://drive.google.com/drive/folders/1j7Nkfe6ZhzKFXePHdsseeeGI877Xu1yf). Please put the downloaded files into the `data_txt` directory like this:
-  ```
-  data_txt
-  |--ImageNet_LT
-    |--ImageNet_LT_train.txt
-    |--ImageNet_LT_test.txt
-    |--ImageNet_LT_val.txt
-  |--Places_LT
-    |--Places_LT_train.txt
-    |--Places_LT_test.txt
-    |--Places_LT_val.txt
-  ```
+```
+data_txt
+|--ImageNet_LT
+  |--ImageNet_LT_train.txt
+  |--ImageNet_LT_test.txt
+  |--ImageNet_LT_val.txt
+|--Places_LT
+  |--Places_LT_train.txt
+  |--Places_LT_test.txt
+  |--Places_LT_val.txt
+```
 
 ### Pretrained models
 * For the training on Places-LT, we follow previous methods and use [the pre-trained ResNet-152 model](https://github.com/zhmiao/OpenLongTailRecognition-OLTR).
@@ -67,36 +67,38 @@ pip install -r requirements.txt
 
 ## Results and Pretrained Models
 
+The corresponding checkpoints can be found in `checkpoints/`.
+
 ### CIFAR100-LT and CIFAR10-LT (ResNet32)
 
-| Dataset     |      IF      | Top-1 Acc|  |
-| -------     | -------      |-------   | -------   |
-|	CIFAR100-LT |  $\beta=100$ |	50.91	  |		|	
-|	            |  $\beta=50$  |	55.12   |		|	
-|	            |  $\beta=10$  |	64.74   |	[Checkpoint]()	|	
-| CIFAR10-LT  | $\beta=100$  |	84.02   |	[Checkpoint]() |  
-|	            |  $\beta=50$  |	87.21   |		|	
-|	            |  $\beta=10$  |	91.79   |	[Checkpoint]()	|	
- 
+| Dataset     |      IF      | Top-1 Acc|
+| -------     | -------      |-------   |
+|	CIFAR100-LT |  $\beta=100$ |	50.91	  |
+|	            |  $\beta=50$  |	55.12   |
+|	            |  $\beta=10$  |	64.74   |
+| CIFAR10-LT  | $\beta=100$  |	84.02   |
+|	            |  $\beta=50$  |	87.21   |
+|	            |  $\beta=10$  |	91.79   |
+
 
 ### Places-LT (ResNet-152)
 
-| Dataset  | IF | Top-1 Acc |  |
-| ------- | -------     |-------       | ------- |
-|	Places-LT |  $\beta=996$ |	39.89 |		|	
+| Dataset  | IF | Top-1 Acc |
+| ------- | -------     |-------       |
+|	Places-LT |  $\beta=996$ |	39.89 |
 
 ### ImageNet20-LT and ImageNet-LT(ResNeXt50)
 
-| Dataset  | IF | Top-1 Acc |  |
-| ------- | -------     |-------       | ------- |
-|	ImageNet20-LT |  $\beta=250$ |	74.60 |		|	
-| ImageNet-LT | $\beta=256$ |	 58.78 |	[Checkpoint]()	  |  
+| Dataset  | IF | Top-1 Acc |
+| ------- | -------     |-------       |
+|	ImageNet20-LT |  $\beta=250$ |	74.60 |
+| ImageNet-LT | $\beta=256$ |	 58.78 |
 
 ### iNaturelist13 an iNaturalist2018 (ResNet50)
-| Dataset  | IF | Top-1 Acc |  |
-| ------- | -------     |-------       | ------- |
-|	iNaturelist13 |  $\beta=190$ |	83.35 |	[Checkpoint]()	|	
-|	iNaturelist 2018|  $\beta=512$ |	73.20 |		|	
+| Dataset  | IF | Top-1 Acc |
+| ------- | -------     |-------       |
+|	iNaturelist13 |  $\beta=190$ |	83.35 |
+|	iNaturelist 2018|  $\beta=512$ |	73.20 |
 ## Usage
 
 ### CIFAR100-LT
@@ -117,7 +119,7 @@ saved
   |--ImageNet_LT
     |--checkpoint.pth
     |--config.json
-  ```
+```
 - You can also just copy the corresponding file `config_[dataset].json`  from the directory `configs/`
 ### CIFAR10-LT
 To train MCE on CIFAR10, run:
@@ -166,10 +168,5 @@ python train.py -c configs/config_iNaturalist.json
 
 To evaluate the performance on the test set, run
 ```
-python test.py -r [YOUR_DIR]\model_best.pth
+python test.py -r [YOUR_DIR]/model_best.pth
 ```
-
-# Acknowledgements
-This is a project based on this [pytorch template](https://github.com/victoresque/pytorch-template).
-
-The mutli-expert framework are based on [SADE](https://github.com/Vanint/SADE-AgnosticLT).

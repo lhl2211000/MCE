@@ -168,3 +168,4 @@ To evaluate the performance on the test set, run
 ```
 python test.py -r [YOUR_DIR]/model_best.pth
 ```
+Due to the file size limitations imposed by GitHub, we are currently unable to directly upload our checkpoints to the repository.
